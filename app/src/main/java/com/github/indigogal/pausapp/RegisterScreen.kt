@@ -1,5 +1,6 @@
 package com.github.indigogal.pausapp
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TimeInput
@@ -22,6 +24,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.util.Calendar
@@ -31,12 +34,15 @@ import java.util.Calendar
 @Composable
 fun RegisterForm(){
 
+    val context = LocalContext.current
     val currentTime = Calendar.getInstance()
     val timePickerState = rememberTimePickerState(
         initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
         initialMinute = currentTime.get(Calendar.MINUTE),
         is24Hour = true
     )
+
+    val nameState = rememberTextFieldState(initialText = "")
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -46,11 +52,11 @@ fun RegisterForm(){
 
         Text(
             text = "Comenzemos tu registro!",
-
+            style = MaterialTheme.typography.displayMedium
         )
-
+        Spacer(modifier = Modifier.height(25.dp))
         TextField(
-            state = rememberTextFieldState(initialText = ""),
+            state = nameState,
             label = { Text("Nombre") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -73,7 +79,13 @@ fun RegisterForm(){
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { /* TODO: Handle registration logic */ },
+            onClick = {
+                val intent = Intent(context, RachaPage::class.java).apply {
+                    putExtra(RachaPage.EXTRA_NOMBRE, nameState.text)
+                    putExtra(RachaPage.EXTRA_NUM_DIAS,12)
+                }
+                context.startActivity(intent)
+            },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Registrarse")

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,15 +36,23 @@ import androidx.compose.ui.unit.sp
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 
 class RachaPage : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_NOMBRE = "extra_nombre"
+        const val EXTRA_NUM_DIAS = "extra_num_dias"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val nombre = intent.getStringExtra(EXTRA_NOMBRE) ?: "Usuario"
+        val numDias = intent.getIntExtra(EXTRA_NUM_DIAS, 0)
         setContent {
             AppTheme(){
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Page(
-                        nombre = "Android",
-                        num_dias=12,
+                        nombre = nombre,
+                        num_dias = numDias,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -61,10 +70,11 @@ fun Page(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        Spacer(modifier = Modifier.height(35.dp))
         Text(
             text = "Bienvenido de vuelta $nombre!",
             fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.displayMedium,
             textAlign = TextAlign.Center
         )
         ProgressFireImage(
@@ -73,6 +83,7 @@ fun Page(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
         )
         Text(
             text = "Tu Racha Actual es de $num_dias dias",
+            style = MaterialTheme.typography.displaySmall,
             modifier = modifier
         )
         StreakCalendar(
