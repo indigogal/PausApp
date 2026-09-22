@@ -81,8 +81,8 @@ fun RegisterForm(){
         Button(
             onClick = {
                 val intent = Intent(context, Exercise_Page::class.java).apply {
-                    putExtra(RachaPage.EXTRA_NOMBRE, nameState.text)
-                    putExtra(RachaPage.EXTRA_NUM_DIAS,12)
+                    putExtra(RachaPage.EXTRA_NOMBRE, nameState.text.toString())
+                    putExtra(RachaPage.EXTRA_NUM_DIAS, 12)
                 }
                 context.startActivity(intent)
             },

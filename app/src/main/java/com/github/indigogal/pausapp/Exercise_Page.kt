@@ -65,19 +65,30 @@ class Exercise_Page : ComponentActivity() {
 @Composable
 fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
     val totalTimeSeconds = 60
-    var timeRemainingMs by remember { mutableLongStateOf(totalTimeSeconds * 1000L) }
+    val totalTimeMs = totalTimeSeconds * 1000L
+
+    var timeRemainingMs by remember { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isRunning, timeRemainingMs) {
-        if (isRunning && timeRemainingMs > 0) {
-            delay(10)
-            timeRemainingMs = (timeRemainingMs - 10).coerceAtLeast(0L)
-        } else if (timeRemainingMs == 0L) {
-            isRunning = false
+    // Corregido: Se pasa solo `isRunning` como clave para no reiniciar el efecto en cada tick
+    LaunchedEffect(isRunning) {
+        if (isRunning) {
+            var lastTime = System.currentTimeMillis()
+            while (isRunning && timeRemainingMs > 0) {
+                delay(16) // ~60 FPS es más que suficiente para animar el temporizador
+                val currentTime = System.currentTimeMillis()
+                val deltaTime = currentTime - lastTime
+                lastTime = currentTime
+
+                timeRemainingMs = (timeRemainingMs - deltaTime).coerceAtLeast(0L)
+            }
+            if (timeRemainingMs == 0L) {
+                isRunning = false
+            }
         }
     }
 
-    val progress = (totalTimeSeconds * 1000L - timeRemainingMs).toFloat() / (totalTimeSeconds * 1000L)
+    val progress = (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
 
     Column(
         modifier = modifier
@@ -120,7 +131,7 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
             OutlinedButton(
                 onClick = {
                     isRunning = false
-                    timeRemainingMs = totalTimeSeconds * 1000L
+                    timeRemainingMs = totalTimeMs
                 },
                 shape = RoundedCornerShape(12.dp)
             ) {

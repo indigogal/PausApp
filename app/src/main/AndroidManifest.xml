@@ -27,6 +27,10 @@
             android:name=".RachaPage"
             android:exported="false"
             android:theme="@style/Theme.PausApp" />
+        <activity
+            android:name=".Exercise_Page"
+            android:exported="false"
+            android:theme="@style/Theme.PausApp" />
     </application>
 
 </manifest>
