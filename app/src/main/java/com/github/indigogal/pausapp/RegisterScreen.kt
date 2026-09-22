@@ -80,7 +80,7 @@ fun RegisterForm(){
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                val intent = Intent(context, RachaPage::class.java).apply {
+                val intent = Intent(context, Exercise_Page::class.java).apply {
                     putExtra(RachaPage.EXTRA_NOMBRE, nameState.text)
                     putExtra(RachaPage.EXTRA_NUM_DIAS,12)
                 }

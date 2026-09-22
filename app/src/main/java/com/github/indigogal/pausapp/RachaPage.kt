@@ -90,6 +90,7 @@ fun Page(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
             markedDays = (6..17).toSet(),
             currentDay = 18
         )
+
     }
 }
 
