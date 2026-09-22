@@ -70,12 +70,11 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
     var timeRemainingMs by remember { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
 
-    // Corregido: Se pasa solo `isRunning` como clave para no reiniciar el efecto en cada tick
     LaunchedEffect(isRunning) {
         if (isRunning) {
             var lastTime = System.currentTimeMillis()
             while (isRunning && timeRemainingMs > 0) {
-                delay(16) // ~60 FPS es más que suficiente para animar el temporizador
+                delay(16)
                 val currentTime = System.currentTimeMillis()
                 val deltaTime = currentTime - lastTime
                 lastTime = currentTime
@@ -90,6 +89,12 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
 
     val progress = (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
 
+    // Formatear el tiempo aquí para pasarlo al texto correspondiente
+    val secondsLeft = (timeRemainingMs / 1000).toInt()
+    val minutes = secondsLeft / 60
+    val seconds = secondsLeft % 60
+    val timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -98,23 +103,36 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Bienvenido de vuelta, $nombre!",
+            text = "Empezemos, $nombre!!!",
             fontSize = 22.sp,
             style = MaterialTheme.typography.displayMedium,
             textAlign = TextAlign.Center
         )
 
+        // El círculo ahora solo dibuja la barra de progreso sin texto interno
         ProgressTimerImage(
             progress = progress,
-            timeRemainingMs = timeRemainingMs,
             size = 220.dp
         )
 
-        Text(
-            text = "Tu Racha Actual es de $num_dias días",
-            style = MaterialTheme.typography.displaySmall,
-            textAlign = TextAlign.Center
-        )
+        // Bloque central donde antes estaba el texto de la racha
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = timeFormatted,
+                fontSize = 42.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF1D1B20)
+            )
+
+            Text(
+                text = "Nombre de ejercicio Text Sample",
+                style = MaterialTheme.typography.displaySmall,
+                textAlign = TextAlign.Center
+            )
+        }
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -144,17 +162,11 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
 @Composable
 fun ProgressTimerImage(
     progress: Float,
-    timeRemainingMs: Long,
     size: Dp = 200.dp,
     strokeWidth: Dp = 16.dp,
     trackColor: Color = Color(0xFFEADBFF),
     progressColor: Color = Color(0xFF673AB7)
 ) {
-    val secondsLeft = (timeRemainingMs / 1000).toInt()
-    val minutes = secondsLeft / 60
-    val seconds = secondsLeft % 60
-    val timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
@@ -185,13 +197,6 @@ fun ProgressTimerImage(
                 style = Stroke(width = strokePx, cap = StrokeCap.Round)
             )
         }
-
-        Text(
-            text = timeFormatted,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color(0xFF1D1B20)
-        )
     }
 }
 
