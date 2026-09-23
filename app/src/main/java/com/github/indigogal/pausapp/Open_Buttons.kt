@@ -1,19 +1,15 @@
 package com.github.indigogal.pausapp
 
-import android.content.Intent
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
 
 @Composable
-fun OpenRachaButton() {
-    val context = LocalContext.current
-
+fun OpenRachaButton(navController: NavController, nombre: String = "Usuario", numDias: Int = 12) {
     Button(
         onClick = {
-            val intent = Intent(context, RachaPage::class.java)
-            context.startActivity(intent)
+            navController.navigate("racha/$nombre/$numDias")
         }
     ) {
         Text("Ver pantalla de Racha")
