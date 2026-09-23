@@ -1,9 +1,5 @@
 package com.github.indigogal.pausapp
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,47 +23,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
 
-class Exercise_Page : ComponentActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-
-        // Recuperación ultra-segura del Extra:
-        // Evita el crash al convertir cualquier objeto enviado (incluyendo TextFieldState/TextFieldBuffer) a String
-        val rawExtra = intent.extras?.get(RachaPage.EXTRA_NOMBRE)
-        val nombre = if (rawExtra != null && rawExtra.toString().isNotBlank()) {
-            rawExtra.toString()
-        } else {
-            "Usuario"
-        }
-
-        val numDias = intent.getIntExtra(RachaPage.EXTRA_NUM_DIAS, 0)
-
-        setContent {
-            AppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    EPage(
-                        nombre = nombre,
-                        num_dias = numDias,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
-fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
-    val totalTimeSeconds = 60
+fun ExerciseScreen(
+    nombre: String,
+    numDias: Int,
+    modifier: Modifier = Modifier,
+    viewModel: ExerciseViewModel = viewModel()
+) {
+    val exercises by viewModel.exercises.collectAsState()
+    val currentExercise = exercises.firstOrNull()
+
+    val totalTimeSeconds = currentExercise?.durationSeconds ?: 60
     val totalTimeMs = totalTimeSeconds * 1000L
 
-    var timeRemainingMs by remember { mutableLongStateOf(totalTimeMs) }
+    var timeRemainingMs by remember(totalTimeMs) { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRunning) {
@@ -87,13 +62,18 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
         }
     }
 
-    val progress = (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
+    val progress = if (totalTimeMs > 0) {
+        (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
+    } else {
+        0f
+    }
 
-    // Formatear el tiempo aquí para pasarlo al texto correspondiente
     val secondsLeft = (timeRemainingMs / 1000).toInt()
     val minutes = secondsLeft / 60
     val seconds = secondsLeft % 60
     val timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+
+    val exerciseTitle = currentExercise?.title ?: "Cargando ejercicio..."
 
     Column(
         modifier = modifier
@@ -109,13 +89,11 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
 
-        // El círculo ahora solo dibuja la barra de progreso sin texto interno
         ProgressTimerImage(
             progress = progress,
             size = 220.dp
         )
 
-        // Bloque central donde antes estaba el texto de la racha
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -128,7 +106,7 @@ fun EPage(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
             )
 
             Text(
-                text = "Nombre de ejercicio Text Sample",
+                text = exerciseTitle,
                 style = MaterialTheme.typography.displaySmall,
                 textAlign = TextAlign.Center
             )
@@ -202,12 +180,12 @@ fun ProgressTimerImage(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Exercise_PagePreview() {
+fun ExerciseScreenPreview() {
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            EPage(
+            ExerciseScreen(
                 nombre = "Android",
-                num_dias = 12,
+                numDias = 12,
                 modifier = Modifier.padding(innerPadding)
             )
         }
