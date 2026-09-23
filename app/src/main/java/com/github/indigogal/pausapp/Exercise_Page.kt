@@ -23,16 +23,26 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
 import kotlinx.coroutines.delay
 import java.util.Locale
 
 @Composable
-fun ExerciseScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
-    val totalTimeSeconds = 60
+fun ExerciseScreen(
+    nombre: String,
+    numDias: Int,
+    modifier: Modifier = Modifier,
+    viewModel: ExerciseViewModel = viewModel()
+) {
+    val exercises by viewModel.exercises.collectAsState()
+    val currentExercise = exercises.firstOrNull()
+
+    val totalTimeSeconds = currentExercise?.durationSeconds ?: 60
     val totalTimeMs = totalTimeSeconds * 1000L
 
-    var timeRemainingMs by remember { mutableLongStateOf(totalTimeMs) }
+    var timeRemainingMs by remember(totalTimeMs) { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRunning) {
@@ -52,12 +62,18 @@ fun ExerciseScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) 
         }
     }
 
-    val progress = (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
+    val progress = if (totalTimeMs > 0) {
+        (totalTimeMs - timeRemainingMs).toFloat() / totalTimeMs
+    } else {
+        0f
+    }
 
     val secondsLeft = (timeRemainingMs / 1000).toInt()
     val minutes = secondsLeft / 60
     val seconds = secondsLeft % 60
     val timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+
+    val exerciseTitle = currentExercise?.title ?: "Cargando ejercicio..."
 
     Column(
         modifier = modifier
@@ -90,7 +106,7 @@ fun ExerciseScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) 
             )
 
             Text(
-                text = "Nombre de ejercicio Text Sample",
+                text = exerciseTitle,
                 style = MaterialTheme.typography.displaySmall,
                 textAlign = TextAlign.Center
             )
