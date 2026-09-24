@@ -1,10 +1,5 @@
 package com.github.indigogal.pausapp
 
-import android.R.attr.padding
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -35,36 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 
-class RachaPage : ComponentActivity() {
-
-    companion object {
-        const val EXTRA_NOMBRE = "extra_nombre"
-        const val EXTRA_NUM_DIAS = "extra_num_dias"
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        val nombre = intent.getStringExtra(EXTRA_NOMBRE) ?: "Usuario"
-        val numDias = intent.getIntExtra(EXTRA_NUM_DIAS, 0)
-        setContent {
-            AppTheme(){
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Page(
-                        nombre = nombre,
-                        num_dias = numDias,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
-    }
-}
-
 @Composable
-fun Page(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
+fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -82,9 +51,8 @@ fun Page(nombre: String, num_dias: Int, modifier: Modifier = Modifier) {
             size = 180.dp
         )
         Text(
-            text = "Tu Racha Actual es de $num_dias dias",
-            style = MaterialTheme.typography.displaySmall,
-            modifier = modifier
+            text = "Tu Racha Actual es de $numDias dias",
+            style = MaterialTheme.typography.displaySmall
         )
         StreakCalendar(
             markedDays = (6..17).toSet(),
@@ -240,18 +208,17 @@ fun StreakCalendar(
         }
     }
 }
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun RachaPagePreview() {
+fun RachaScreenPreview() {
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            Page(
+            RachaScreen(
                 nombre = "Android",
-                num_dias = 12,
+                numDias = 12,
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
-
-
