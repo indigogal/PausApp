@@ -37,7 +37,13 @@ kotlin {
 }
 
 dependencies {
+    val room_version = "3.0.2"
+
+    implementation("androidx.room3:room3-runtime:$room_version")
+    ksp("androidx.room3:room3-compiler:$room_version")
+
     implementation("androidx.compose.ui:ui-text-google-fonts")
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
