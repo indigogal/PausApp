@@ -30,6 +30,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions{
+        kotlinCompilerExtensionVersion = "1.5.15"
+    }
 }
 
 kotlin {
@@ -37,12 +40,23 @@ kotlin {
 }
 
 dependencies {
+    implementation(libs.androidx.ui.graphics)
     val room_version = "3.0.2"
+    val media3_version = "1.11.1"
+
+    implementation("androidx.media3:media3-exoplayer:${media3_version}")
+
+    implementation("androidx.media3:media3-ui-compose-material3:${media3_version}")
+    implementation("androidx.media3:media3-ui-compose:${media3_version}")
+    implementation("androidx.media3:media3-test-utils:${media3_version}")
 
     implementation("androidx.room3:room3-runtime:$room_version")
     ksp("androidx.room3:room3-compiler:$room_version")
 
     implementation("androidx.compose.ui:ui-text-google-fonts")
+
+    implementation("androidx.glance:glance-appwidget:1.1.1")
+    implementation("androidx.glance:glance-material3:1.1.1")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
