@@ -40,7 +40,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.androidx.ui.graphics)
     val room_version = "3.0.2"
     val media3_version = "1.11.1"
 
