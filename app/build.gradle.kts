@@ -1,19 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.3.10"
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.github.indigogal.pausapp"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.github.indigogal.pausapp"
         minSdk = 33
-        targetSdk = 37
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -22,14 +20,12 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = false
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -37,6 +33,10 @@ android {
     composeOptions{
         kotlinCompilerExtensionVersion = "1.5.15"
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
@@ -64,10 +64,18 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
-    implementation(libs.androidx.compose.material3)
-    implementation("androidx.navigation:navigation-compose:2.10.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    // Media3 ExoPlayer
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

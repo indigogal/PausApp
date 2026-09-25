@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,10 +21,46 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            AppTheme(){
+            AppTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Surface(modifier = Modifier.padding(innerPadding)) {
-                        RegisterForm()
+                        NavHost(
+                            navController = navController,
+                            startDestination = "register"
+                        ) {
+                            composable("register") {
+                                RegisterForm(navController = navController)
+                            }
+                            composable(
+                                route = "exercise/{nombre}/{numDias}",
+                                arguments = listOf(
+                                    navArgument("nombre") { type = NavType.StringType },
+                                    navArgument("numDias") { type = NavType.IntType }
+                                )
+                            ) { backStackEntry ->
+                                val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
+                                val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
+                                ExerciseScreen(
+                                    nombre = nombre,
+                                    numDias = numDias
+                                )
+                            }
+                            composable(
+                                route = "racha/{nombre}/{numDias}",
+                                arguments = listOf(
+                                    navArgument("nombre") { type = NavType.StringType },
+                                    navArgument("numDias") { type = NavType.IntType }
+                                )
+                            ) { backStackEntry ->
+                                val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
+                                val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
+                                RachaScreen(
+                                    nombre = nombre,
+                                    numDias = numDias
+                                )
+                            }
+                        }
                     }
                 }
             }
