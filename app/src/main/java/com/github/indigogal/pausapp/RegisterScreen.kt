@@ -81,8 +81,7 @@ fun RegisterForm(navController: NavController = rememberNavController()){
         Button(
             onClick = {
                 val nombre = name.ifBlank { "Usuario" }
-                val numDias = 12
-                navController.navigate("exercise/$nombre/$numDias")
+                navController.navigate("racha")
             },
             modifier = Modifier.fillMaxWidth()
         ) {

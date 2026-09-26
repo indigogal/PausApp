@@ -2,6 +2,7 @@ package com.github.indigogal.pausapp
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -12,11 +13,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,26 +28,46 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.compose.material3.Player
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
 import kotlinx.coroutines.delay
-import java.util.Locale
 
 @Composable
 fun ExerciseScreen(
-    nombre: String,
-    numDias: Int,
     modifier: Modifier = Modifier,
     viewModel: ExerciseViewModel = viewModel()
 ) {
-    val exercises by viewModel.exercises.collectAsState()
-    val currentExercise = exercises.firstOrNull()
+    val exerciseSet by viewModel.currentExerciseSet.collectAsState()
+    val currentExercise = exerciseSet?.let { set ->
+        val index = set.amountCompleted
+        set.exercises.getOrNull(index)
+    }
 
     val totalTimeSeconds = currentExercise?.durationSeconds ?: 60
-    val totalTimeMs = totalTimeSeconds * 1000L
+    val totalTimeMs = totalTimeSeconds.toLong() * 1000L
 
     var timeRemainingMs by remember(totalTimeMs) { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val player = remember(context) {
+        ExoPlayer.Builder(context).build().apply {
+            playWhenReady = true
+        }
+    }
+
+    val exerciseVideo = MediaItem.fromUri(currentExercise!!.assetPath)
+
+    // Release the player when this composable leaves composition
+    DisposableEffect(player) {
+        onDispose {
+            player.release()
+        }
+    }
 
     LaunchedEffect(isRunning) {
         if (isRunning) {
@@ -71,9 +95,9 @@ fun ExerciseScreen(
     val secondsLeft = (timeRemainingMs / 1000).toInt()
     val minutes = secondsLeft / 60
     val seconds = secondsLeft % 60
-    val timeFormatted = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+    val timeFormatted = String.format(LocalConfiguration.current.locales[0], "%02d:%02d", minutes, seconds)
 
-    val exerciseTitle = currentExercise?.title ?: "Cargando ejercicio..."
+    val exerciseTitle = currentExercise?.name ?: "Cargando ejercicio..."
 
     Column(
         modifier = modifier
@@ -82,16 +106,11 @@ fun ExerciseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "Empezemos, $nombre!!!",
-            fontSize = 22.sp,
-            style = MaterialTheme.typography.displayMedium,
-            textAlign = TextAlign.Center
-        )
 
         ProgressTimerImage(
             progress = progress,
-            size = 220.dp
+            size = 320.dp,
+            player = player
         )
 
         Column(
@@ -117,7 +136,10 @@ fun ExerciseScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = { isRunning = !isRunning },
+                onClick = {
+                    isRunning = !isRunning
+                    player.play()
+                          },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -143,7 +165,8 @@ fun ProgressTimerImage(
     size: Dp = 200.dp,
     strokeWidth: Dp = 16.dp,
     trackColor: Color = Color(0xFFEADBFF),
-    progressColor: Color = Color(0xFF673AB7)
+    progressColor: Color = Color(0xFF673AB7),
+    player: Player
 ) {
     Box(
         modifier = Modifier.size(size),
@@ -175,6 +198,14 @@ fun ProgressTimerImage(
                 style = Stroke(width = strokePx, cap = StrokeCap.Round)
             )
         }
+        Player(
+            modifier = Modifier
+                .size(size - strokeWidth)
+                .padding(20.dp)
+                .clip(CircleShape)
+            ,
+            player = player
+        )
     }
 }
 
@@ -184,9 +215,8 @@ fun ExerciseScreenPreview() {
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             ExerciseScreen(
-                nombre = "Android",
-                numDias = 12,
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.padding(innerPadding),
+                viewModel = TODO()
             )
         }
     }

@@ -32,6 +32,7 @@ import com.github.indigogal.pausapp.ui.theme.AppTheme
 
 @Composable
 fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
+    // TODO: replace nombre and numDias with room queries held by composable
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -47,12 +48,14 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
         ProgressFireImage(
-            progress = 0.45f, //porcentaje de 0 a 1.0
+            // TODO: Relate progress percentage to current streak, 0.1 per day
+            progress = 0.45f, //porcentaje de 0 a 1.
             size = 180.dp
         )
         Text(
             text = "Tu Racha Actual es de $numDias dias",
-            style = MaterialTheme.typography.displaySmall
+            style = MaterialTheme.typography.displaySmall,
+            textAlign = TextAlign.Center
         )
         StreakCalendar(
             markedDays = (6..17).toSet(),
@@ -116,7 +119,7 @@ fun StreakCalendar(
     markedDays: Set<Int>,
     currentDay: Int
 ) {
-    val daysOfWeek = listOf("S", "M", "T", "W", "T", "F", "S")
+    val daysOfWeek = listOf("D", "L", "M", "M", "J", "V", "S")
     val totalDaysInMonth = 31
     val startOffset = 5 // Espacios en blanco para alinear el primer día del mes
 
