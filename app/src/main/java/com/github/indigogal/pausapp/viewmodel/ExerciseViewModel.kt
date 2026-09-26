@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+// TODO: Should prolly restructure this so it doesn't leak context
 class ExerciseViewModel(private val context: Context) : ViewModel() {
     private val _currentExerciseSet = MutableStateFlow<ExerciseSet?>(null)
     val currentExerciseSet = _currentExerciseSet.asStateFlow()
@@ -24,5 +25,3 @@ class ExerciseViewModel(private val context: Context) : ViewModel() {
         }
     }
 }
-
-// TODO:

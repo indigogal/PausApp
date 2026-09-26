@@ -10,15 +10,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.github.indigogal.pausapp.data.AppDatabase
 import com.github.indigogal.pausapp.data.ExerciseRepository
+import com.github.indigogal.pausapp.data.User
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
+import com.github.indigogal.pausapp.viewmodel.UserViewModel
+import com.github.indigogal.pausapp.viewmodel.UserViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,6 +36,12 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     exerciseViewModel.loadRandomExerciseSet()
                 }
+
+                val database = AppDatabase.getInstance(applicationContext)
+                val userDao = database.getUserDAO()
+
+                val factory = UserViewModelFactory(userDao)
+                val userViewModel: UserViewModel = ViewModelProvider(this, factory)[UserViewModel::class.java]
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Surface(modifier = Modifier.padding(innerPadding)) {
@@ -54,12 +65,7 @@ class MainActivity : ComponentActivity() {
                                     navArgument("nombre") { type = NavType.StringType },
                                 )
                             ) { backStackEntry ->
-                                val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
-                                val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
-                                RachaScreen(
-                                    nombre = nombre,
-                                    numDias = numDias
-                                )
+                                RachaScreen(userViewModel)
                             }
                         }
                     }

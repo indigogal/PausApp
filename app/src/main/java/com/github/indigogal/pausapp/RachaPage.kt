@@ -29,10 +29,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.viewmodel.UserViewModel
+import androidx.compose.runtime.collectAsState
+import com.github.indigogal.pausapp.data.FakeUserDAO
+import java.time.LocalDate
 
 @Composable
-fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
+fun RachaScreen(userVM: UserViewModel, modifier: Modifier = Modifier) {
     // TODO: replace nombre and numDias with room queries held by composable
+
+    val user = userVM.user.collectAsState().value
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -42,7 +49,7 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
     ) {
         Spacer(modifier = Modifier.height(35.dp))
         Text(
-            text = "Bienvenido de vuelta $nombre!",
+            text = "Bienvenido de vuelta ${user.name}!",
             fontSize = 22.sp,
             style = MaterialTheme.typography.displayMedium,
             textAlign = TextAlign.Center
@@ -53,7 +60,7 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
             size = 180.dp
         )
         Text(
-            text = "Tu Racha Actual es de $numDias dias",
+            text = "Tu Racha Actual es de ${user.streakStart.compareTo(user.streakEnd)} dias",
             style = MaterialTheme.typography.displaySmall,
             textAlign = TextAlign.Center
         )
@@ -139,12 +146,7 @@ fun StreakCalendar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "August 2025 ▼",
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF49454F)
-            )
-            Text(
-                text = "<   >",
+                text = "${LocalDate.now().month} ${LocalDate.now().year}",
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF49454F)
             )
@@ -215,13 +217,14 @@ fun StreakCalendar(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun RachaScreenPreview() {
+
+    // INFO: This will show an error as the compiler is not aware this is a preview and not runtime
+    val dummyDAO = FakeUserDAO()
+    val dummyViewModel = UserViewModel(FakeUserDAO())
+
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            RachaScreen(
-                nombre = "Android",
-                numDias = 12,
-                modifier = Modifier.padding(innerPadding)
-            )
+            RachaScreen(dummyViewModel, Modifier.padding(innerPadding))
         }
     }
 }
