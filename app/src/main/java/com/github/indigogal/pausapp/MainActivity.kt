@@ -63,11 +63,21 @@ class MainActivity : ComponentActivity() {
                             }
                             composable("exercise") {
                                 ExerciseScreen(
-                                    viewModel = exerciseViewModel
+                                    viewModel = exerciseViewModel,
+                                    userViewModel = userViewModel,
+                                    onNavigateBack = {
+                                        navController.popBackStack()
+                                    }
                                 )
                             }
                             composable("racha") {
-                                RachaScreen(userViewModel)
+                                RachaScreen(
+                                    userVM = userViewModel,
+                                    onStartRoutine = {
+                                        exerciseViewModel.loadRandomExerciseSet()
+                                        navController.navigate("exercise")
+                                    }
+                                )
                             }
                         }
                     }

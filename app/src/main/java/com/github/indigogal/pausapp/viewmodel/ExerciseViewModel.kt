@@ -23,4 +23,16 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
             _currentExerciseSet.value = ExerciseRepository.createRandomExerciseSet(getApplication())
         }
     }
+
+    fun completeCurrentExercise(): Boolean {
+        val currentSet = _currentExerciseSet.value ?: return false
+        val nextAmount = currentSet.amountCompleted + 1
+        _currentExerciseSet.value = currentSet.copy(amountCompleted = nextAmount)
+        return nextAmount >= currentSet.exercises.size
+    }
+
+    fun isSetComplete(): Boolean {
+        val currentSet = _currentExerciseSet.value ?: return false
+        return currentSet.amountCompleted >= currentSet.exercises.size
+    }
 }

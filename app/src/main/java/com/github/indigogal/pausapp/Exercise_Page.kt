@@ -34,35 +34,43 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.material3.Player
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
+import com.github.indigogal.pausapp.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun ExerciseScreen(
+    viewModel: ExerciseViewModel = viewModel(),
+    userViewModel: UserViewModel? = null,
     modifier: Modifier = Modifier,
-    viewModel: ExerciseViewModel = viewModel()
+    onNavigateBack: () -> Unit = {}
 ) {
     val exerciseSet by viewModel.currentExerciseSet.collectAsState()
+    val totalExercises = exerciseSet?.exercises?.size ?: 0
+    val currentIndex = exerciseSet?.amountCompleted ?: 0
     val currentExercise = exerciseSet?.let { set ->
-        val index = set.amountCompleted
-        set.exercises.getOrNull(index)
+        set.exercises.getOrNull(currentIndex)
     }
 
-    val totalTimeSeconds = currentExercise?.durationSeconds ?: 60
+    val totalTimeSeconds = currentExercise?.durationSeconds?.toInt() ?: 60
     val totalTimeMs = totalTimeSeconds.toLong() * 1000L
 
-    var timeRemainingMs by remember(totalTimeMs) { mutableLongStateOf(totalTimeMs) }
+    var timeRemainingMs by remember(currentExercise) { mutableLongStateOf(totalTimeMs) }
     var isRunning by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val player = remember(context) {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
-        }
+        ExoPlayer.Builder(context).build()
     }
 
     LaunchedEffect(currentExercise) {
         currentExercise?.let { exercise ->
-            player.setMediaItem(MediaItem.fromUri(exercise.assetPath))
+            val uriString = if (exercise.assetPath.startsWith("asset:///")) {
+                exercise.assetPath
+            } else {
+                "asset:///${exercise.assetPath}"
+            }
+            player.setMediaItem(MediaItem.fromUri(uriString))
+            player.repeatMode = Player.REPEAT_MODE_ONE
             player.prepare()
         }
     }
@@ -76,6 +84,7 @@ fun ExerciseScreen(
 
     LaunchedEffect(isRunning) {
         if (isRunning) {
+            player.play()
             var lastTime = System.currentTimeMillis()
             while (isRunning && timeRemainingMs > 0) {
                 delay(16)
@@ -87,7 +96,10 @@ fun ExerciseScreen(
             }
             if (timeRemainingMs == 0L) {
                 isRunning = false
+                player.pause()
             }
+        } else {
+            player.pause()
         }
     }
 
@@ -103,6 +115,7 @@ fun ExerciseScreen(
     val timeFormatted = String.format(LocalConfiguration.current.locales[0], "%02d:%02d", minutes, seconds)
 
     val exerciseTitle = currentExercise?.name ?: "Cargando ejercicio..."
+    val stepText = if (totalExercises > 0) "Ejercicio ${currentIndex + 1} de $totalExercises" else ""
 
     Column(
         modifier = modifier
@@ -111,6 +124,14 @@ fun ExerciseScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        if (stepText.isNotEmpty()) {
+            Text(
+                text = stepText,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF673AB7)
+            )
+        }
 
         ProgressTimerImage(
             progress = progress,
@@ -136,29 +157,54 @@ fun ExerciseScreen(
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        if (timeRemainingMs == 0L && currentExercise != null) {
             Button(
                 onClick = {
-                    isRunning = !isRunning
-                    player.play()
-                          },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(if (isRunning) "Pausar" else "Iniciar")
-            }
-
-            OutlinedButton(
-                onClick = {
-                    isRunning = false
-                    timeRemainingMs = totalTimeMs
+                    val finishedAll = viewModel.completeCurrentExercise()
+                    if (finishedAll || currentIndex >= totalExercises - 1) {
+                        userViewModel?.completeRoutine()
+                        onNavigateBack()
+                    } else {
+                        isRunning = false
+                    }
                 },
-                shape = RoundedCornerShape(12.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth(0.8f)
             ) {
-                Text("Reiniciar")
+                Text(
+                    text = if (currentIndex >= totalExercises - 1) "Finalizar Rutina" else "Siguiente Ejercicio",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(4.dp)
+                )
+            }
+        } else {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = {
+                        isRunning = !isRunning
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(if (isRunning) "Pausar" else "Iniciar")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        isRunning = false
+                        timeRemainingMs = totalTimeMs
+                        player.seekTo(0)
+                        player.pause()
+                    },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Reiniciar")
+                }
             }
         }
     }
@@ -220,8 +266,7 @@ fun ExerciseScreenPreview() {
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
             ExerciseScreen(
-                modifier = Modifier.padding(innerPadding),
-                viewModel = TODO()
+                modifier = Modifier.padding(innerPadding)
             )
         }
     }

@@ -42,29 +42,44 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
-fun calculateStreakDays(streakStart: LocalDate, streakEnd: LocalDate): Int {
-    return if (streakEnd.isBefore(streakStart)) {
-        0
-    } else {
-        (ChronoUnit.DAYS.between(streakStart, streakEnd) + 1).toInt()
+fun calculateStreakDays(
+    streakStart: LocalDate,
+    streakEnd: LocalDate,
+    today: LocalDate = LocalDate.now()
+): Int {
+    if (streakEnd.isBefore(streakStart)) {
+        return 0
     }
+    // If today is strictly after streakEnd + 1 day, the streak was broken
+    if (today.isAfter(streakEnd.plusDays(1))) {
+        return 0
+    }
+    return (ChronoUnit.DAYS.between(streakStart, streakEnd) + 1).toInt()
 }
 
 @Composable
-fun RachaScreen(userVM: UserViewModel, modifier: Modifier = Modifier) {
+fun RachaScreen(
+    userVM: UserViewModel,
+    modifier: Modifier = Modifier,
+    onStartRoutine: () -> Unit = {}
+) {
     val user by userVM.user.collectAsState()
     RachaScreen(
         user = user,
-        modifier = modifier
+        modifier = modifier,
+        onStartRoutine = onStartRoutine
     )
 }
 
 @Composable
 fun RachaScreen(
     user: User,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStartRoutine: () -> Unit = {}
 ) {
-    val streakDays = calculateStreakDays(user.streakStart, user.streakEnd)
+    val today = LocalDate.now()
+    val streakDays = calculateStreakDays(user.streakStart, user.streakEnd, today)
+    val isCompletedToday = user.streakEnd == today && streakDays > 0
     // Relate progress percentage to current streak, 0.1 per day (capped between 0 and 1)
     val progress = (streakDays * 0.1f).coerceIn(0f, 1f)
 
@@ -85,25 +100,36 @@ fun RachaScreen(
             progress = progress,
             size = 180.dp
         )
-        Text(
-            text = "Tu Racha Actual es de $streakDays dias",
-            style = MaterialTheme.typography.displaySmall,
-            textAlign = TextAlign.Center
-        )
-        Button(
-            onClick = {
-                // TODO: Write logic to send user over to a prepared exercise_page
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Tu Racha Actual es de $streakDays dias",
+                style = MaterialTheme.typography.displaySmall,
+                textAlign = TextAlign.Center
+            )
+            if (isCompletedToday) {
+                Text(
+                    text = "¡Excelente! Ya completaste tu rutina de hoy",
+                    fontSize = 14.sp,
+                    color = Color(0xFF4CAF50),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
+        }
+        Button(
+            onClick = onStartRoutine
         ) {
             Text(
-                text = "Iniciar rutina",
+                text = if (isCompletedToday) "Repetir rutina" else "Iniciar rutina",
                 style = AppTypography.bodyMedium,
                 modifier = Modifier.padding(8.dp)
             )
         }
         StreakCalendar(
             streakStart = user.streakStart,
-            streakEnd = user.streakEnd
+            streakEnd = user.streakEnd,
+            currentDate = today
         )
     }
 }
@@ -230,7 +256,8 @@ fun StreakCalendar(
             items(totalDaysInMonth) { index ->
                 val day = index + 1
                 val dayDate = currentDate.withDayOfMonth(day)
-                val isMarked = !dayDate.isBefore(streakStart) && !dayDate.isAfter(streakEnd)
+                val isStreakValid = !currentDate.isAfter(streakEnd.plusDays(1))
+                val isMarked = isStreakValid && !dayDate.isBefore(streakStart) && !dayDate.isAfter(streakEnd)
                 val isToday = (day == currentDate.dayOfMonth)
 
                 Box(

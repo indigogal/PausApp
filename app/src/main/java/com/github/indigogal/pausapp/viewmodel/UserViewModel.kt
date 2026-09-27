@@ -44,4 +44,34 @@ class UserViewModel(private val userDao: UserDAO) : ViewModel() {
             fetchUser()
         }
     }
+
+    fun completeRoutine(today: LocalDate = LocalDate.now()) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val currentUser = userDao.getUser() ?: _users.value
+            val newStreakStart: LocalDate
+            val newStreakEnd = today
+
+            when {
+                // Already completed today: keep streakStart, streakEnd is today
+                currentUser.streakEnd == today -> {
+                    newStreakStart = currentUser.streakStart
+                }
+                // Streak consecutive (yesterday was streakEnd): keep streakStart, streakEnd is today
+                currentUser.streakEnd.plusDays(1) == today -> {
+                    newStreakStart = currentUser.streakStart
+                }
+                // Streak broken (missed day) or invalid: reset streak to start today
+                else -> {
+                    newStreakStart = today
+                }
+            }
+
+            val updatedUser = currentUser.copy(
+                streakStart = newStreakStart,
+                streakEnd = newStreakEnd
+            )
+            userDao.insertUser(updatedUser)
+            fetchUser()
+        }
+    }
 }

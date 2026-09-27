@@ -17,19 +17,28 @@ object ExerciseRepository {
     fun getExercises(context: Context): List<Exercise> {
         if (exercises != null) return exercises!!
 
-        exercises = context.assets.list("exercises")
-            ?.filterNot { filename -> filename == "PLACEHOLDER" }
-            ?.mapIndexed { index, filename ->
-                val durationSeconds = getVideoDuration(context, "exercises/$filename")
-                    Exercise(
-                        id = index,
-                        name = filename.removeSuffix(".mp4"),
-                        assetPath = "exercises/$filename",
-                        durationSeconds = durationSeconds
-                    )
-            }
-            ?.sortedBy { it.name }
-            ?: emptyList()
+        val exercisesInSubfolder = context.assets.list("exercises")
+            ?.filter { it.endsWith(".mp4") && it != "PLACEHOLDER" }
+            ?.map { "exercises/$it" } ?: emptyList()
+
+        val assetPaths = if (exercisesInSubfolder.isNotEmpty()) {
+            exercisesInSubfolder
+        } else {
+            context.assets.list("")
+                ?.filter { it.endsWith(".mp4") && it != "PLACEHOLDER" }
+                ?: emptyList()
+        }
+
+        exercises = assetPaths.mapIndexed { index, path ->
+            val filename = path.substringAfterLast("/")
+            val durationSeconds = getVideoDuration(context, path)
+            Exercise(
+                id = index,
+                name = filename.removeSuffix(".mp4"),
+                assetPath = path,
+                durationSeconds = if (durationSeconds <= 0) 10 else durationSeconds
+            )
+        }.sortedBy { it.name }
 
         return exercises!!
     }
@@ -46,7 +55,7 @@ object ExerciseRepository {
             retriever.release()
             (duration / 1000).toInt() // convert ms to seconds
         } catch (e: Exception) {
-            6 // fallback default
+            10 // fallback default
         }
     }
 }
