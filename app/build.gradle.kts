@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.github.indigogal.pausapp"
-    compileSdk = 34
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.github.indigogal.pausapp"
@@ -30,9 +30,6 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions{
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
 }
 
 kotlin {
@@ -40,7 +37,6 @@ kotlin {
 }
 
 dependencies {
-    val room_version = "3.0.2"
     val media3_version = "1.11.1"
 
     implementation("androidx.media3:media3-exoplayer:${media3_version}")
@@ -48,9 +44,6 @@ dependencies {
     implementation("androidx.media3:media3-ui-compose-material3:${media3_version}")
     implementation("androidx.media3:media3-ui-compose:${media3_version}")
     implementation("androidx.media3:media3-test-utils:${media3_version}")
-
-    implementation("androidx.room3:room3-runtime:$room_version")
-    ksp("androidx.room3:room3-compiler:$room_version")
 
     implementation("androidx.compose.ui:ui-text-google-fonts")
 

@@ -8,13 +8,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.github.indigogal.pausapp.data.AppDatabase
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
+import com.github.indigogal.pausapp.viewmodel.UserViewModel
+import com.github.indigogal.pausapp.viewmodel.UserViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +30,28 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 val navController = rememberNavController()
+                val exerciseViewModel: ExerciseViewModel = viewModel()
+                LaunchedEffect(Unit) {
+                    exerciseViewModel.loadRandomExerciseSet()
+                }
+
+                val database = AppDatabase.getInstance(applicationContext)
+                val userDao = database.getUserDAO()
+
+                val factory = UserViewModelFactory(userDao)
+                val userViewModel: UserViewModel = ViewModelProvider(this, factory)[UserViewModel::class.java]
+
+                val user by userViewModel.user.collectAsState()
+
+                // If a registered user (other than temp user uid = 0) exists, skip registration screen
+                LaunchedEffect(user.isRegistered) {
+                    if (user.isRegistered) {
+                        navController.navigate("racha") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Surface(modifier = Modifier.padding(innerPadding)) {
                         NavHost(
@@ -30,34 +59,24 @@ class MainActivity : ComponentActivity() {
                             startDestination = "register"
                         ) {
                             composable("register") {
-                                RegisterForm(navController = navController)
+                                RegisterForm(navController, userViewModel)
                             }
-                            composable(
-                                route = "exercise/{nombre}/{numDias}",
-                                arguments = listOf(
-                                    navArgument("nombre") { type = NavType.StringType },
-                                    navArgument("numDias") { type = NavType.IntType }
-                                )
-                            ) { backStackEntry ->
-                                val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
-                                val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
+                            composable("exercise") {
                                 ExerciseScreen(
-                                    nombre = nombre,
-                                    numDias = numDias
+                                    viewModel = exerciseViewModel,
+                                    userViewModel = userViewModel,
+                                    onNavigateBack = {
+                                        navController.popBackStack()
+                                    }
                                 )
                             }
-                            composable(
-                                route = "racha/{nombre}/{numDias}",
-                                arguments = listOf(
-                                    navArgument("nombre") { type = NavType.StringType },
-                                    navArgument("numDias") { type = NavType.IntType }
-                                )
-                            ) { backStackEntry ->
-                                val nombre = backStackEntry.arguments?.getString("nombre") ?: "Usuario"
-                                val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
+                            composable("racha") {
                                 RachaScreen(
-                                    nombre = nombre,
-                                    numDias = numDias
+                                    userVM = userViewModel,
+                                    onStartRoutine = {
+                                        exerciseViewModel.loadRandomExerciseSet()
+                                        navController.navigate("exercise")
+                                    }
                                 )
                             }
                         }
