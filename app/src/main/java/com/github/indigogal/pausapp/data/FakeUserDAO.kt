@@ -14,7 +14,7 @@ class FakeUserDAO : UserDAO {
         return User(
             uid = 0,
             name = "User",
-            streakStart = LocalDate.now(),
+            streakStart = LocalDate.now().minusDays(5),
             streakEnd = LocalDate.now(),
             reminderTime = LocalTime.parse("17:38")
         )

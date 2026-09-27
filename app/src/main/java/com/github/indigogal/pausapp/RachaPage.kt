@@ -9,10 +9,13 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,17 +31,42 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.indigogal.pausapp.data.User
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.ui.theme.AppTypography
 import com.github.indigogal.pausapp.viewmodel.UserViewModel
-import androidx.compose.runtime.collectAsState
-import com.github.indigogal.pausapp.data.FakeUserDAO
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.time.temporal.ChronoUnit
+import java.util.Locale
+
+fun calculateStreakDays(streakStart: LocalDate, streakEnd: LocalDate): Int {
+    return if (streakEnd.isBefore(streakStart)) {
+        0
+    } else {
+        (ChronoUnit.DAYS.between(streakStart, streakEnd) + 1).toInt()
+    }
+}
 
 @Composable
 fun RachaScreen(userVM: UserViewModel, modifier: Modifier = Modifier) {
-    // TODO: replace nombre and numDias with room queries held by composable
+    val user by userVM.user.collectAsState()
+    RachaScreen(
+        user = user,
+        modifier = modifier
+    )
+}
 
-    val user = userVM.user.collectAsState().value
+@Composable
+fun RachaScreen(
+    user: User,
+    modifier: Modifier = Modifier
+) {
+    val streakDays = calculateStreakDays(user.streakStart, user.streakEnd)
+    // Relate progress percentage to current streak, 0.1 per day (capped between 0 and 1)
+    val progress = (streakDays * 0.1f).coerceIn(0f, 1f)
 
     Column(
         modifier = modifier
@@ -47,7 +75,6 @@ fun RachaScreen(userVM: UserViewModel, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Spacer(modifier = Modifier.height(35.dp))
         Text(
             text = "Bienvenido de vuelta ${user.name}!",
             fontSize = 22.sp,
@@ -55,18 +82,28 @@ fun RachaScreen(userVM: UserViewModel, modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
         ProgressFireImage(
-            // TODO: Relate progress percentage to current streak, 0.1 per day
-            progress = 0.45f, //porcentaje de 0 a 1.
+            progress = progress,
             size = 180.dp
         )
         Text(
-            text = "Tu Racha Actual es de ${user.streakStart.compareTo(user.streakEnd)} dias",
+            text = "Tu Racha Actual es de $streakDays dias",
             style = MaterialTheme.typography.displaySmall,
             textAlign = TextAlign.Center
         )
+        Button(
+            onClick = {
+                // TODO: Write logic to send user over to a prepared exercise_page
+            }
+        ) {
+            Text(
+                text = "Iniciar rutina",
+                style = AppTypography.bodyMedium,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
         StreakCalendar(
-            markedDays = (6..17).toSet(),
-            currentDay = 18
+            streakStart = user.streakStart,
+            streakEnd = user.streakEnd
         )
     }
 }
@@ -103,7 +140,7 @@ fun ProgressFireImage(
             // Arco de avance activo
             drawArc(
                 color = progressColor,
-                startAngle = 45f,
+                startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
                 topLeft = Offset(topLeftOffset, topLeftOffset),
@@ -123,15 +160,25 @@ fun ProgressFireImage(
 
 @Composable
 fun StreakCalendar(
-    markedDays: Set<Int>,
-    currentDay: Int
+    streakStart: LocalDate,
+    streakEnd: LocalDate,
+    modifier: Modifier = Modifier,
+    currentDate: LocalDate = LocalDate.now()
 ) {
     val daysOfWeek = listOf("D", "L", "M", "M", "J", "V", "S")
-    val totalDaysInMonth = 31
-    val startOffset = 5 // Espacios en blanco para alinear el primer día del mes
+    val yearMonth = YearMonth.from(currentDate)
+    val totalDaysInMonth = yearMonth.lengthOfMonth()
+
+    // Calculate starting offset for Sunday-first calendar grid (D, L, M, M, J, V, S)
+    val firstDayOfMonth = currentDate.withDayOfMonth(1)
+    val startOffset = firstDayOfMonth.dayOfWeek.value % 7
+
+    val monthName = currentDate.month
+        .getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es"))
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.forLanguageTag("es")) else it.toString() }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(Color(0xFFF3EDF7))
@@ -146,7 +193,7 @@ fun StreakCalendar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${LocalDate.now().month} ${LocalDate.now().year}",
+                text = "$monthName ${currentDate.year}",
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF49454F)
             )
@@ -173,7 +220,7 @@ fun StreakCalendar(
         // Matriz de días
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(250.dp),
+            modifier = Modifier.height(260.dp),
             userScrollEnabled = false
         ) {
             items(startOffset) {
@@ -182,8 +229,9 @@ fun StreakCalendar(
 
             items(totalDaysInMonth) { index ->
                 val day = index + 1
-                val isMarked = day in markedDays
-                val isToday = day == currentDay
+                val dayDate = currentDate.withDayOfMonth(day)
+                val isMarked = !dayDate.isBefore(streakStart) && !dayDate.isAfter(streakEnd)
+                val isToday = (day == currentDate.dayOfMonth)
 
                 Box(
                     modifier = Modifier
@@ -217,14 +265,17 @@ fun StreakCalendar(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun RachaScreenPreview() {
-
-    // INFO: This will show an error as the compiler is not aware this is a preview and not runtime
-    val dummyDAO = FakeUserDAO()
-    val dummyViewModel = UserViewModel(FakeUserDAO())
+    val sampleUser = User(
+        uid = 1,
+        name = "Usuario Demo",
+        streakStart = LocalDate.now().minusDays(5),
+        streakEnd = LocalDate.now(),
+        reminderTime = LocalTime.of(17, 38)
+    )
 
     AppTheme {
         Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            RachaScreen(dummyViewModel, Modifier.padding(innerPadding))
+            RachaScreen(user = sampleUser, modifier = Modifier.padding(innerPadding))
         }
     }
 }
