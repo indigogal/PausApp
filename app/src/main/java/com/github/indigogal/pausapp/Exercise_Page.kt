@@ -60,7 +60,12 @@ fun ExerciseScreen(
         }
     }
 
-    val exerciseVideo = MediaItem.fromUri(currentExercise!!.assetPath)
+    LaunchedEffect(currentExercise) {
+        currentExercise?.let { exercise ->
+            player.setMediaItem(MediaItem.fromUri(exercise.assetPath))
+            player.prepare()
+        }
+    }
 
     // Release the player when this composable leaves composition
     DisposableEffect(player) {

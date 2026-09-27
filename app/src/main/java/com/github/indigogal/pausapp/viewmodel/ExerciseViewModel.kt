@@ -1,7 +1,7 @@
 package com.github.indigogal.pausapp.viewmodel
 
-import android.content.Context
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.indigogal.pausapp.data.ExerciseRepository
 import com.github.indigogal.pausapp.model.ExerciseSet
@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// TODO: Should prolly restructure this so it doesn't leak context
-class ExerciseViewModel(private val context: Context) : ViewModel() {
+class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
     private val _currentExerciseSet = MutableStateFlow<ExerciseSet?>(null)
     val currentExerciseSet = _currentExerciseSet.asStateFlow()
 
@@ -21,7 +20,7 @@ class ExerciseViewModel(private val context: Context) : ViewModel() {
 
     fun loadRandomExerciseSet() {
         viewModelScope.launch(Dispatchers.IO){
-            _currentExerciseSet.value = ExerciseRepository.createRandomExerciseSet(context)
+            _currentExerciseSet.value = ExerciseRepository.createRandomExerciseSet(getApplication())
         }
     }
 }

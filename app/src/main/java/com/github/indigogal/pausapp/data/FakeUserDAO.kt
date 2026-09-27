@@ -23,4 +23,8 @@ class FakeUserDAO : UserDAO {
     override suspend fun flushUsers() {
         // Do nothing in preview
     }
+
+    override suspend fun deleteTempUser() {
+        // Do nothing in preview
+    }
 }

@@ -27,12 +27,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.github.indigogal.pausapp.data.User
+import com.github.indigogal.pausapp.viewmodel.UserViewModel
+import java.time.LocalDate
+import java.time.LocalTime
 import java.util.Calendar
 
-@Preview
+// TODO: Preview had to be removed in order to compile, do the same that you did RachaPage
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegisterForm(navController: NavController = rememberNavController()){
+fun RegisterForm(navController: NavController = rememberNavController(), userVM: UserViewModel){
 
     val currentTime = Calendar.getInstance()
     val timePickerState = rememberTimePickerState(
@@ -80,7 +84,14 @@ fun RegisterForm(navController: NavController = rememberNavController()){
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                val nombre = name.ifBlank { "Usuario" }
+                userVM.addUser(User(
+                    uid = 1,
+                    name = name.ifBlank { "Usuario" },
+                    streakStart = LocalDate.now(),
+                    streakEnd = LocalDate.now(),
+                    reminderTime = LocalTime.of(timePickerState.hour, timePickerState.minute),
+                ))
+
                 navController.navigate("racha")
             },
             modifier = Modifier.fillMaxWidth()

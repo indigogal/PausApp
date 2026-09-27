@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.github.indigogal.pausapp.data.User
 import com.github.indigogal.pausapp.data.UserDAO
+import kotlinx.coroutines.Dispatchers
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -29,14 +30,17 @@ class UserViewModel(private val userDao: UserDAO) : ViewModel() {
     }
 
     private fun fetchUser() {
-        viewModelScope.launch {
-            _users.value = userDao.getUser()
+        viewModelScope.launch(Dispatchers.IO) {
+            userDao.getUser()?.let { user ->
+                _users.value = user
+            }
         }
     }
 
     fun addUser(user: User) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             userDao.insertUser(user)
+            userDao.deleteTempUser()
             fetchUser()
         }
     }

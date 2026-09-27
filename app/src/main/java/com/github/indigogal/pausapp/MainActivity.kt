@@ -9,17 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.github.indigogal.pausapp.data.AppDatabase
-import com.github.indigogal.pausapp.data.ExerciseRepository
-import com.github.indigogal.pausapp.data.User
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
 import com.github.indigogal.pausapp.viewmodel.UserViewModel
@@ -43,6 +41,17 @@ class MainActivity : ComponentActivity() {
                 val factory = UserViewModelFactory(userDao)
                 val userViewModel: UserViewModel = ViewModelProvider(this, factory)[UserViewModel::class.java]
 
+                val user by userViewModel.user.collectAsState()
+
+                // If a registered user (other than temp user uid = 0) exists, skip registration screen
+                LaunchedEffect(user.isRegistered) {
+                    if (user.isRegistered) {
+                        navController.navigate("racha") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Surface(modifier = Modifier.padding(innerPadding)) {
                         NavHost(
@@ -50,21 +59,14 @@ class MainActivity : ComponentActivity() {
                             startDestination = "register"
                         ) {
                             composable("register") {
-                                RegisterForm(navController = navController)
+                                RegisterForm(navController, userViewModel)
                             }
-                            composable(
-                                route = "exercise",
-                            ) { backStackEntry ->
+                            composable("exercise") {
                                 ExerciseScreen(
                                     viewModel = exerciseViewModel
                                 )
                             }
-                            composable(
-                                route = "racha",
-                                arguments = listOf(
-                                    navArgument("nombre") { type = NavType.StringType },
-                                )
-                            ) { backStackEntry ->
+                            composable("racha") {
                                 RachaScreen(userViewModel)
                             }
                         }
