@@ -33,6 +33,7 @@ import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.compose.material3.Player
 import com.github.indigogal.pausapp.ui.theme.AppTheme
+import com.github.indigogal.pausapp.ui.theme.AppTypography
 import com.github.indigogal.pausapp.viewmodel.ExerciseViewModel
 import com.github.indigogal.pausapp.viewmodel.UserViewModel
 import kotlinx.coroutines.delay
@@ -51,7 +52,9 @@ fun ExerciseScreen(
         set.exercises.getOrNull(currentIndex)
     }
 
-    val totalTimeSeconds = currentExercise?.durationSeconds?.toInt() ?: 60
+    // Each exercise runs for a fixed 30 seconds regardless of the video length;
+    // the video loops (REPEAT_MODE_ONE) underneath until the timer finishes.
+    val totalTimeSeconds = 20
     val totalTimeMs = totalTimeSeconds.toLong() * 1000L
 
     var timeRemainingMs by remember(currentExercise) { mutableLongStateOf(totalTimeMs) }
@@ -145,8 +148,7 @@ fun ExerciseScreen(
         ) {
             Text(
                 text = timeFormatted,
-                fontSize = 42.sp,
-                fontWeight = FontWeight.Bold,
+                style = AppTypography.displaySmall,
                 color = Color(0xFF1D1B20)
             )
 

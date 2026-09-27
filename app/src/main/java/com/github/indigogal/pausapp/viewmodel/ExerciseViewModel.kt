@@ -30,9 +30,4 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         _currentExerciseSet.value = currentSet.copy(amountCompleted = nextAmount)
         return nextAmount >= currentSet.exercises.size
     }
-
-    fun isSetComplete(): Boolean {
-        val currentSet = _currentExerciseSet.value ?: return false
-        return currentSet.amountCompleted >= currentSet.exercises.size
-    }
 }

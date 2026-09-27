@@ -102,7 +102,7 @@ fun RachaScreen(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                text = "Tu Racha Actual es de $streakDays dias",
+                text = "Tu Racha Actual es de $streakDays ${if (streakDays == 1) "día" else "dias"}",
                 style = MaterialTheme.typography.displaySmall,
                 textAlign = TextAlign.Center
             )
