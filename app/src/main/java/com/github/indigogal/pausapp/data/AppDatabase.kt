@@ -25,52 +25,52 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pausapp_database"
                 )
-                    .addCallback(DatabaseCallback())
+                    .addCallback(DatabaseCallback { INSTANCE })
                     .build()
                 INSTANCE = instance
                 instance
             }
         }
+    }
+}
 
-        private class DatabaseCallback : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                INSTANCE?.let { database ->
-                    CoroutineScope(Dispatchers.IO).launch {
-                        populateInitialData(database.exerciseDao())
-                    }
-                }
+private class DatabaseCallback(private val databaseProvider: () -> AppDatabase?) : RoomDatabase.Callback() {
+    override fun onCreate(db: SupportSQLiteDatabase) {
+        super.onCreate(db)
+        databaseProvider()?.let { database ->
+            CoroutineScope(Dispatchers.IO).launch {
+                populateInitialData(database.exerciseDao())
             }
         }
-
-        suspend fun populateInitialData(dao: ExerciseDao) {
-            dao.insertExercise(
-                ExerciseEntity(
-                    title = "Respiración Profunda",
-                    description = "Ejercicio de respiración guiada para relajar el cuerpo y la mente.",
-                    durationSeconds = 45,
-                    videoUri = "",
-                    audioUri = ""
-                )
-            )
-            dao.insertExercise(
-                ExerciseEntity(
-                    title = "Estiramiento de Cuello",
-                    description = "Estiramiento suave para liberar tensión en el cuello y hombros.",
-                    durationSeconds = 60,
-                    videoUri = "",
-                    audioUri = ""
-                )
-            )
-            dao.insertExercise(
-                ExerciseEntity(
-                    title = "Pausa Activa Postural",
-                    description = "Movimientos de columna y hombros para mejorar la postura.",
-                    durationSeconds = 90,
-                    videoUri = "",
-                    audioUri = ""
-                )
-            )
-        }
     }
+}
+
+private suspend fun populateInitialData(dao: ExerciseDao) {
+    dao.insertExercise(
+        ExerciseEntity(
+            title = "Respiración Profunda",
+            description = "Ejercicio de respiración guiada para relajar el cuerpo y la mente.",
+            durationSeconds = 45,
+            videoUri = "",
+            audioUri = ""
+        )
+    )
+    dao.insertExercise(
+        ExerciseEntity(
+            title = "Estiramiento de Cuello",
+            description = "Estiramiento suave para liberar tensión en el cuello y hombros.",
+            durationSeconds = 60,
+            videoUri = "",
+            audioUri = ""
+        )
+    )
+    dao.insertExercise(
+        ExerciseEntity(
+            title = "Pausa Activa Postural",
+            description = "Movimientos de columna y hombros para mejorar la postura.",
+            durationSeconds = 90,
+            videoUri = "",
+            audioUri = ""
+        )
+    )
 }

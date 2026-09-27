@@ -28,10 +28,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.github.indigogal.pausapp.ui.theme.AppTheme
 
 @Composable
-fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
+fun RachaScreen(
+    nombre: String,
+    numDias: Int,
+    navController: NavController? = null,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -39,7 +46,7 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        Spacer(modifier = Modifier.height(35.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = "Bienvenido de vuelta $nombre!",
             fontSize = 22.sp,
@@ -47,7 +54,7 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
             textAlign = TextAlign.Center
         )
         ProgressFireImage(
-            progress = 0.45f, //porcentaje de 0 a 1.0
+            progress = 0.45f,
             size = 180.dp
         )
         Text(
@@ -58,6 +65,15 @@ fun RachaScreen(nombre: String, numDias: Int, modifier: Modifier = Modifier) {
             markedDays = (6..17).toSet(),
             currentDay = 18
         )
+
+        navController?.let { controller ->
+            OpenExerciseButton(
+                navController = controller,
+                nombre = nombre,
+                numDias = numDias,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+        }
     }
 }
 

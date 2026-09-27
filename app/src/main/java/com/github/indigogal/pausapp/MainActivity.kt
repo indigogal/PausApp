@@ -57,7 +57,8 @@ class MainActivity : ComponentActivity() {
                                 val numDias = backStackEntry.arguments?.getInt("numDias") ?: 12
                                 RachaScreen(
                                     nombre = nombre,
-                                    numDias = numDias
+                                    numDias = numDias,
+                                    navController = navController
                                 )
                             }
                         }
