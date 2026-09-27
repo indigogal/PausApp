@@ -14,8 +14,9 @@ import java.time.LocalTime
 data class User(
     @PrimaryKey val uid: Int,
     @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name="streakStart") val streakStart: LocalDate,
-    @ColumnInfo(name = "streakEnd") val streakEnd: LocalDate,
+    // Null until the user completes their first routine: no streak means 0 days
+    @ColumnInfo(name="streakStart") val streakStart: LocalDate?,
+    @ColumnInfo(name = "streakEnd") val streakEnd: LocalDate?,
     @ColumnInfo(name="reminderTime") val reminderTime: LocalTime
 ) {
     val isRegistered: Boolean

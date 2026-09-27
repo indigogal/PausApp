@@ -132,7 +132,7 @@ fun ExerciseScreen(
                 text = stepText,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF673AB7)
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -149,7 +149,7 @@ fun ExerciseScreen(
             Text(
                 text = timeFormatted,
                 style = AppTypography.displaySmall,
-                color = Color(0xFF1D1B20)
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
@@ -170,7 +170,7 @@ fun ExerciseScreen(
                         isRunning = false
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth(0.8f)
             ) {
@@ -190,7 +190,7 @@ fun ExerciseScreen(
                     onClick = {
                         isRunning = !isRunning
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF673AB7)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(if (isRunning) "Pausar" else "Iniciar")
@@ -217,10 +217,14 @@ fun ProgressTimerImage(
     progress: Float,
     size: Dp = 200.dp,
     strokeWidth: Dp = 16.dp,
-    trackColor: Color = Color(0xFFEADBFF),
-    progressColor: Color = Color(0xFF673AB7),
+    trackColor: Color? = null,
+    progressColor: Color? = null,
     player: Player
 ) {
+    // Colors come exclusively from the AppTheme color scheme
+    val resolvedTrackColor = trackColor ?: MaterialTheme.colorScheme.surfaceContainerHighest
+    val resolvedProgressColor = progressColor ?: MaterialTheme.colorScheme.primary
+
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
@@ -232,7 +236,7 @@ fun ProgressTimerImage(
             val topLeftOffset = strokePx / 2
 
             drawArc(
-                color = trackColor,
+                color = resolvedTrackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -242,7 +246,7 @@ fun ProgressTimerImage(
             )
 
             drawArc(
-                color = progressColor,
+                color = resolvedProgressColor,
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
@@ -255,8 +259,7 @@ fun ProgressTimerImage(
             modifier = Modifier
                 .size(size - strokeWidth)
                 .padding(20.dp)
-                .clip(CircleShape)
-            ,
+                .clip(CircleShape),
             player = player
         )
     }

@@ -46,4 +46,11 @@ class RachaStreakLogicTest {
         val end = LocalDate.of(2026, 9, 20)
         assertEquals(0, calculateStreakDays(start, end, LocalDate.of(2026, 9, 26)))
     }
+
+    @Test
+    fun `new user without completed routine has no streak`() {
+        // A freshly registered user has never completed a routine -> 0 days,
+        // not 1, even though both dates could previously default to today.
+        assertEquals(0, calculateStreakDays(null, null, LocalDate.of(2026, 9, 26)))
+    }
 }

@@ -30,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
@@ -98,11 +97,12 @@ fun ExercisePage() {
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.size(circleSize)
                         ) {
+                            // Colors come exclusively from the AppTheme color scheme
+                            val trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                            val progressColor = MaterialTheme.colorScheme.primary
                             Canvas(
                                 modifier = Modifier.fillMaxSize(),
                             ) {
-                                val trackColor = Color(0xFFEADBFF)
-                                val progressColor = Color(0xFF673AB7)
                                 val strokePx = strokeWidth.toPx()
                                 // Arc ring sized from the canvas bounds so it always matches the Player
                                 val arcSize = size.minDimension - strokePx

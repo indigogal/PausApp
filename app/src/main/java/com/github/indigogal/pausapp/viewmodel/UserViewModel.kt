@@ -15,11 +15,11 @@ import java.time.LocalTime
 class UserViewModel(private val userDao: UserDAO) : ViewModel() {
 
     private val _users = MutableStateFlow<User>(User(
-        // Temp user
+        // Temp user: no streak until the first routine is completed
         uid = 0,
         name = "User",
-        streakStart = LocalDate.now(),
-        streakEnd = LocalDate.now(),
+        streakStart = null,
+        streakEnd = null,
         reminderTime = LocalTime.parse("17:38"),
     ))
 
@@ -48,7 +48,8 @@ class UserViewModel(private val userDao: UserDAO) : ViewModel() {
     fun completeRoutine(today: LocalDate = LocalDate.now()) {
         viewModelScope.launch(Dispatchers.IO) {
             val currentUser = userDao.getUser() ?: _users.value
-            val newStreakStart: LocalDate
+            // Null until the user completes their first routine
+            val newStreakStart: LocalDate?
             val newStreakEnd = today
 
             when {
@@ -57,10 +58,10 @@ class UserViewModel(private val userDao: UserDAO) : ViewModel() {
                     newStreakStart = currentUser.streakStart
                 }
                 // Streak consecutive (yesterday was streakEnd): keep streakStart, streakEnd is today
-                currentUser.streakEnd.plusDays(1) == today -> {
+                currentUser.streakEnd?.plusDays(1) == today -> {
                     newStreakStart = currentUser.streakStart
                 }
-                // Streak broken (missed day) or invalid: reset streak to start today
+                // First completion, streak broken (missed day) or invalid: start fresh today
                 else -> {
                     newStreakStart = today
                 }

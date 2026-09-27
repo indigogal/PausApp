@@ -42,11 +42,22 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
 
+// Compact day-cell size so the calendar fits on smaller screens
+private val CalendarDayCellSize = 36.dp
+
+// Number of rows the calendar grid needs for the current month
+private fun calendarGridRows(startOffset: Int, totalDays: Int): Int =
+    (startOffset + totalDays + 6) / 7
+
 fun calculateStreakDays(
-    streakStart: LocalDate,
-    streakEnd: LocalDate,
+    streakStart: LocalDate?,
+    streakEnd: LocalDate?,
     today: LocalDate = LocalDate.now()
 ): Int {
+    // A user who has never completed a routine has no active streak
+    if (streakStart == null || streakEnd == null) {
+        return 0
+    }
     if (streakEnd.isBefore(streakStart)) {
         return 0
     }
@@ -110,13 +121,16 @@ fun RachaScreen(
                 Text(
                     text = "¡Excelente! Ya completaste tu rutina de hoy",
                     fontSize = 14.sp,
-                    color = Color(0xFF4CAF50),
+                    color = MaterialTheme.colorScheme.tertiary,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
+        Spacer(
+            Modifier.height(12.dp)
+        )
         Button(
             onClick = onStartRoutine
         ) {
@@ -126,6 +140,9 @@ fun RachaScreen(
                 modifier = Modifier.padding(8.dp)
             )
         }
+        Spacer(
+            Modifier.height(12.dp)
+        )
         StreakCalendar(
             streakStart = user.streakStart,
             streakEnd = user.streakEnd,
@@ -139,9 +156,13 @@ fun ProgressFireImage(
     progress: Float,
     size: Dp = 180.dp,
     strokeWidth: Dp = 16.dp,
-    trackColor: Color = Color(0xFFEADBFF),
-    progressColor: Color = Color(0xFF673AB7)
+    trackColor: Color? = null,
+    progressColor: Color? = null
 ) {
+    // Colors come exclusively from the AppTheme color scheme
+    val resolvedTrackColor = trackColor ?: MaterialTheme.colorScheme.surfaceContainerHighest
+    val resolvedProgressColor = progressColor ?: MaterialTheme.colorScheme.primary
+
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
@@ -154,7 +175,7 @@ fun ProgressFireImage(
 
             // Fondo circular deshabilitado/incompleto
             drawArc(
-                color = trackColor,
+                color = resolvedTrackColor,
                 startAngle = -90f,
                 sweepAngle = 360f,
                 useCenter = false,
@@ -165,7 +186,7 @@ fun ProgressFireImage(
 
             // Arco de avance activo
             drawArc(
-                color = progressColor,
+                color = resolvedProgressColor,
                 startAngle = -90f,
                 sweepAngle = 360f * progress,
                 useCenter = false,
@@ -186,8 +207,8 @@ fun ProgressFireImage(
 
 @Composable
 fun StreakCalendar(
-    streakStart: LocalDate,
-    streakEnd: LocalDate,
+    streakStart: LocalDate?,
+    streakEnd: LocalDate?,
     modifier: Modifier = Modifier,
     currentDate: LocalDate = LocalDate.now()
 ) {
@@ -203,25 +224,29 @@ fun StreakCalendar(
         .getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es"))
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.forLanguageTag("es")) else it.toString() }
 
+    // Grid height adapts to the month (5 or 6 rows) and the compact cell size
+    val gridRows = calendarGridRows(startOffset, totalDaysInMonth)
+    val gridHeight = (gridRows * CalendarDayCellSize.value).dp
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
-            .background(Color(0xFFF3EDF7))
-            .padding(16.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .padding(12.dp)
     ) {
         // Cabecera del mes
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "$monthName ${currentDate.year}",
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF49454F)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -229,14 +254,14 @@ fun StreakCalendar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp),
+                .padding(bottom = 4.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             daysOfWeek.forEach { day ->
                 Text(
                     text = day,
-                    fontSize = 13.sp,
-                    color = Color.Gray,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f)
                 )
@@ -246,43 +271,56 @@ fun StreakCalendar(
         // Matriz de días
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
-            modifier = Modifier.height(260.dp),
+            modifier = Modifier.height(gridHeight),
             userScrollEnabled = false
         ) {
             items(startOffset) {
-                Spacer(modifier = Modifier.aspectRatio(1f))
+                Spacer(modifier = Modifier.size(CalendarDayCellSize))
             }
 
             items(totalDaysInMonth) { index ->
                 val day = index + 1
                 val dayDate = currentDate.withDayOfMonth(day)
-                val isStreakValid = !currentDate.isAfter(streakEnd.plusDays(1))
-                val isMarked = isStreakValid && !dayDate.isBefore(streakStart) && !dayDate.isAfter(streakEnd)
+                // Smart-casts after the null guards: no streak -> nothing marked
+                val isMarked = streakStart != null &&
+                    streakEnd != null &&
+                    !currentDate.isAfter(streakEnd.plusDays(1)) &&
+                    !dayDate.isBefore(streakStart) &&
+                    !dayDate.isAfter(streakEnd)
                 val isToday = (day == currentDate.dayOfMonth)
 
                 Box(
                     modifier = Modifier
-                        .padding(2.dp)
-                        .aspectRatio(1f)
-                        .then(
-                            when {
-                                isMarked -> Modifier
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF673AB7))
-                                isToday -> Modifier
-                                    .clip(CircleShape)
-                                    .border(1.5.dp, Color(0xFF673AB7), CircleShape)
-                                else -> Modifier
-                            }
-                        ),
+                        .fillMaxWidth()
+                        .padding(1.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = day.toString(),
-                        fontSize = 13.sp,
-                        color = if (isMarked) Color.White else Color(0xFF1D1B20),
-                        fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(CalendarDayCellSize)
+                            .then(
+                                when {
+                                    isMarked -> Modifier
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary)
+                                    isToday -> Modifier
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                    else -> Modifier
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.toString(),
+                            fontSize = 12.sp,
+                            color = when {
+                                isMarked -> MaterialTheme.colorScheme.onPrimary
+                                else -> MaterialTheme.colorScheme.onSurface
+                            },
+                            fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
                 }
             }
         }

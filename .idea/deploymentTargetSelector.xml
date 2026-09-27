@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-25T23:15:16.541609796Z">
+        <DropdownSelection timestamp="2026-09-27T09:29:35.332246281Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=/var/home/indigo/.android/avd/Pixel_9.avd" />

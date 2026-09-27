@@ -87,8 +87,10 @@ fun RegisterForm(navController: NavController = rememberNavController(), userVM:
                 userVM.addUser(User(
                     uid = 1,
                     name = name.ifBlank { "Usuario" },
-                    streakStart = LocalDate.now(),
-                    streakEnd = LocalDate.now(),
+                    // Streak starts empty; it only begins when the user completes
+                    // their first routine (see UserViewModel.completeRoutine)
+                    streakStart = null,
+                    streakEnd = null,
                     reminderTime = LocalTime.of(timePickerState.hour, timePickerState.minute),
                 ))
 
