@@ -5,10 +5,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -44,6 +44,10 @@ import java.util.Locale
 
 // Compact day-cell size so the calendar fits on smaller screens
 private val CalendarDayCellSize = 36.dp
+
+// Number of rows the calendar grid needs for the current month
+private fun calendarGridRows(startOffset: Int, totalDays: Int): Int =
+    (startOffset + totalDays + 6) / 7
 
 fun calculateStreakDays(
     streakStart: LocalDate?,
@@ -93,10 +97,9 @@ fun RachaScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 32.dp),
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = "Bienvenido de vuelta ${user.name}!",
@@ -125,6 +128,9 @@ fun RachaScreen(
                 )
             }
         }
+        Spacer(
+            Modifier.height(12.dp)
+        )
         Button(
             onClick = onStartRoutine
         ) {
@@ -134,6 +140,9 @@ fun RachaScreen(
                 modifier = Modifier.padding(8.dp)
             )
         }
+        Spacer(
+            Modifier.height(12.dp)
+        )
         StreakCalendar(
             streakStart = user.streakStart,
             streakEnd = user.streakEnd,
@@ -215,15 +224,16 @@ fun StreakCalendar(
         .getDisplayName(TextStyle.FULL, Locale.forLanguageTag("es"))
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.forLanguageTag("es")) else it.toString() }
 
-    val allCells = List<Int?>(startOffset) { null } + (1..totalDaysInMonth).toList()
-    val weeks = allCells.chunked(7)
+    // Grid height adapts to the month (5 or 6 rows) and the compact cell size
+    val gridRows = calendarGridRows(startOffset, totalDaysInMonth)
+    val gridHeight = (gridRows * CalendarDayCellSize.value).dp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(24.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(16.dp)
+            .padding(12.dp)
     ) {
         // Cabecera del mes
         Row(
@@ -259,64 +269,57 @@ fun StreakCalendar(
         }
 
         // Matriz de días
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            modifier = Modifier.height(gridHeight),
+            userScrollEnabled = false
         ) {
-            weeks.forEach { week ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    week.forEach { day ->
-                        Box(
-                            modifier = Modifier.weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (day != null) {
-                                val dayDate = currentDate.withDayOfMonth(day)
-                                // Smart-casts after the null guards: no streak -> nothing marked
-                                val isMarked = streakStart != null &&
-                                    streakEnd != null &&
-                                    !currentDate.isAfter(streakEnd.plusDays(1)) &&
-                                    !dayDate.isBefore(streakStart) &&
-                                    !dayDate.isAfter(streakEnd)
-                                val isToday = (day == currentDate.dayOfMonth)
+            items(startOffset) {
+                Spacer(modifier = Modifier.size(CalendarDayCellSize))
+            }
 
-                                Box(
-                                    modifier = Modifier
-                                        .size(CalendarDayCellSize)
-                                        .then(
-                                            when {
-                                                isMarked -> Modifier
-                                                    .clip(CircleShape)
-                                                    .background(MaterialTheme.colorScheme.primary)
-                                                isToday -> Modifier
-                                                    .clip(CircleShape)
-                                                    .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                                                else -> Modifier
-                                            }
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = day.toString(),
-                                        fontSize = 12.sp,
-                                        color = when {
-                                            isMarked -> MaterialTheme.colorScheme.onPrimary
-                                            else -> MaterialTheme.colorScheme.onSurface
-                                        },
-                                        fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal
-                                    )
+            items(totalDaysInMonth) { index ->
+                val day = index + 1
+                val dayDate = currentDate.withDayOfMonth(day)
+                // Smart-casts after the null guards: no streak -> nothing marked
+                val isMarked = streakStart != null &&
+                    streakEnd != null &&
+                    !currentDate.isAfter(streakEnd.plusDays(1)) &&
+                    !dayDate.isBefore(streakStart) &&
+                    !dayDate.isAfter(streakEnd)
+                val isToday = (day == currentDate.dayOfMonth)
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(1.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(CalendarDayCellSize)
+                            .then(
+                                when {
+                                    isMarked -> Modifier
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary)
+                                    isToday -> Modifier
+                                        .clip(CircleShape)
+                                        .border(1.5.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                                    else -> Modifier
                                 }
-                            } else {
-                                Spacer(modifier = Modifier.size(CalendarDayCellSize))
-                            }
-                        }
-                    }
-                    if (week.size < 7) {
-                        repeat(7 - week.size) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = day.toString(),
+                            fontSize = 12.sp,
+                            color = when {
+                                isMarked -> MaterialTheme.colorScheme.onPrimary
+                                else -> MaterialTheme.colorScheme.onSurface
+                            },
+                            fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal
+                        )
                     }
                 }
             }
