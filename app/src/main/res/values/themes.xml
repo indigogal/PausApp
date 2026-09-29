@@ -2,4 +2,15 @@
 <resources>
 
     <style name="Theme.PausApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Color de fondo de la pantalla de carga -->
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+
+        <!-- Tu imagen vectorial del centro -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+
+        <!-- A qué tema cambia la app en cuanto termina de cargar (Pon el nombre exacto de tu tema base) -->
+        <item name="postSplashScreenTheme">@style/Theme.PausApp</item>
+    </style>
 </resources>

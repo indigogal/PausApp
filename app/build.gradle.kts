@@ -40,7 +40,7 @@ dependencies {
     val media3_version = "1.11.1"
 
     implementation("androidx.media3:media3-exoplayer:${media3_version}")
-
+    implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.media3:media3-ui-compose-material3:${media3_version}")
     implementation("androidx.media3:media3-ui-compose:${media3_version}")
     implementation("androidx.media3:media3-test-utils:${media3_version}")
