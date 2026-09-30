@@ -1,5 +1,6 @@
 package com.github.indigogal.pausapp
 
+import android.media.RingtoneManager
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -21,6 +22,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,6 +68,17 @@ fun ExerciseScreen(
         ExoPlayer.Builder(context).build()
     }
 
+    // Short, stock chime (the system notification sound — no bundled asset needed)
+    // played whenever an exercise finishes.
+    val completionSound = remember {
+        runCatching {
+            RingtoneManager.getRingtone(
+                context,
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            )
+        }.getOrNull()
+    }
+
     LaunchedEffect(currentExercise) {
         currentExercise?.let { exercise ->
             val uriString = if (exercise.assetPath.startsWith("asset:///")) {
@@ -100,6 +114,7 @@ fun ExerciseScreen(
             if (timeRemainingMs == 0L) {
                 isRunning = false
                 player.pause()
+                completionSound?.play()
             }
         } else {
             player.pause()
@@ -118,6 +133,7 @@ fun ExerciseScreen(
     val timeFormatted = String.format(LocalConfiguration.current.locales[0], "%02d:%02d", minutes, seconds)
 
     val exerciseTitle = currentExercise?.name ?: "Cargando ejercicio..."
+    val exerciseDescription = currentExercise?.description.orEmpty()
     val stepText = if (totalExercises > 0) "Ejercicio ${currentIndex + 1} de $totalExercises" else ""
 
     Column(
@@ -155,7 +171,14 @@ fun ExerciseScreen(
             Text(
                 text = exerciseTitle,
                 style = MaterialTheme.typography.displaySmall,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.semantics {
+                    contentDescription = if (exerciseDescription.isBlank()) {
+                        exerciseTitle
+                    } else {
+                        "$exerciseTitle. $exerciseDescription"
+                    }
+                }
             )
         }
 

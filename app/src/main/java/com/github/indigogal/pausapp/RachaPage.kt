@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +43,7 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import kotlin.math.roundToInt
 
 // Compact day-cell size so the calendar fits on smaller screens
 private val CalendarDayCellSize = 36.dp
@@ -163,8 +166,14 @@ fun ProgressFireImage(
     val resolvedTrackColor = trackColor ?: MaterialTheme.colorScheme.surfaceContainerHighest
     val resolvedProgressColor = progressColor ?: MaterialTheme.colorScheme.primary
 
+    val progressPercent = (progress * 100).roundToInt()
+
     Box(
-        modifier = Modifier.size(size),
+        modifier = Modifier
+            .size(size)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Fuego de racha, progreso del $progressPercent por ciento"
+            },
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -196,10 +205,10 @@ fun ProgressFireImage(
             )
         }
 
-        // Imagen del fuego en el centro
+        // Decorativo: el contenido lo anuncia el Box padre (progreso de la racha)
         Image(
             painter = painterResource(id = R.drawable.fuego),
-            contentDescription = "Fuego de racha",
+            contentDescription = null,
             modifier = Modifier.size(size / 2.2f)
         )
     }
@@ -213,6 +222,8 @@ fun StreakCalendar(
     currentDate: LocalDate = LocalDate.now()
 ) {
     val daysOfWeek = listOf("D", "L", "M", "M", "J", "V", "S")
+    // Nombres completos para que TalkBack anuncie los días sin ambigüedad
+    val daysOfWeekFull = listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")
     val yearMonth = YearMonth.from(currentDate)
     val totalDaysInMonth = yearMonth.lengthOfMonth()
 
@@ -257,13 +268,17 @@ fun StreakCalendar(
                 .padding(bottom = 4.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
-            daysOfWeek.forEach { day ->
+            daysOfWeek.forEachIndexed { index, day ->
                 Text(
                     text = day,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics {
+                            contentDescription = daysOfWeekFull[index]
+                        }
                 )
             }
         }
@@ -318,7 +333,15 @@ fun StreakCalendar(
                                 isMarked -> MaterialTheme.colorScheme.onPrimary
                                 else -> MaterialTheme.colorScheme.onSurface
                             },
-                            fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (isMarked || isToday) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier.semantics {
+                                contentDescription = when {
+                                    isMarked && isToday -> "Día $day, hoy y parte de tu racha"
+                                    isMarked -> "Día $day, parte de tu racha"
+                                    isToday -> "Día $day, hoy"
+                                    else -> "Día $day"
+                                }
+                            }
                         )
                     }
                 }

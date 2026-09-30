@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="Estiramiento_de_cuello_hacia_adelante_y_hacia_los_lados">
+       Sentado o de pie, con los hombros relajados. Inclina la cabeza hacia un lado mientras te concentras en estirar el cuello. Puedes usar la mano del lado opuesto al estiramiento para intensificarlo suavemente, cuidando de no ejercer presión sobre el cuello. Mantén la posición y repite por 20 segundos.
+    </string>
+    <string name="Flexión_de_muñecas">
+       Con el antebrazo apoyado en una superficie y la mano cerrada en un puño suave, dobla la muñeca hacia abajo todo lo que puedas hasta notar el estiramiento, y vuelve despacio a la posición inicial, con la muñeca recta. Después sube la mano hacia
+    </string>
+    <string name="Flexión_de_extensores">
+        Extienda el codo y la muñeca, y rote externamente el antebrazo del lado que se va a estirar. Con la mano opuesta, sujete la mano del lado que se va a estirar. Extienda suavemente la muñeca hasta sentir el estiramiento. Mantenga la posición y repita por 20 segundos.
+    </string>
+    <string name="Rotación_de_cuello">
+        Sentado o de pie en posición erguida, con los hombros relajados. Simplemente gire la cabeza hacia un lado, dentro de un rango cómodo. Repita el movimiento hacia el otro lado. Repita por 20 segundos.
+    </string>
+    <string name="Rodamiento_de_dedos">
+        Pon la palma de tu mano en una posición plana, haz un puño con la mano, extiende tu pulgar hacia adelante y posteriormente hacia el lado, vuelve a poner la palma de tu mano en una posición plana, repite por 20 segundos.
+    </string>
+</resources>
